@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turing Machine Simulator — Theory of Computation</title>
+  <meta name="description"
+    content="Interactive single-tape Turing Machine simulator with step-by-step execution, custom machine builder, and 5 predefined machines." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- ── HEADER ─────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="brand-icon">⚙️</div>
+        <div class="brand-text">
+          <h1 class="brand-title">Turing Machine Simulator</h1>
+        </div>
+      </div>
+      <div class="header-right">
+        <span id="header-status" class="status-badge status-idle">💤 IDLE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN LAYOUT ────────────────────────────────────────── -->
+  <main class="app-main">
+
+    <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+    <aside class="sidebar">
+
+      <!-- Breakpoints -->
+      <section class="sidebar-section">
+        <h2 class="sidebar-section-title">🛑 Breakpoints <span id="bp-count" style="float:right; font-size: 0.7rem; background: var(--accent-red); color: white; padding: 2px 6px; border-radius: var(--radius-full); display:none;">0</span></h2>
+        <div id="breakpoint-container"></div>
+      </section>
+
+      <!-- Machine Selector -->
+      <section class="sidebar-section">
+        <h2 class="sidebar-section-title">📦 Predefined Machines</h2>
+        <div id="machine-selector" class="machine-selector"></div>
+      </section>
+    </aside>
+
+    <!-- ── CONTENT AREA ─────────────────────────────────────── -->
+    <div class="content-area">
+
+      <!-- Tabs -->
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="simulator" id="tab-simulator">
+          🖥️ Simulator
+        </button>
+        <button class="tab-btn" data-tab="transitions" id="tab-transitions">
+          📋 Transitions
+        </button>
+        <button class="tab-btn" data-tab="builder" id="tab-builder">
+          🏗️ Builder
+        </button>
+        <button class="tab-btn" data-tab="stress" id="tab-stress">
+          🧪 Stress Test
+        </button>
+      </nav>
+
+      <!-- ─ SIMULATOR TAB ──────────────────────────────────── -->
+      <div class="tab-panel simulator-split" data-panel="simulator">
+        <div class="simulator-left">
+          <!-- Tape Section -->
+          <section class="panel-section tape-section">
+            <div class="section-header">
+              <h2 class="section-title">🧵 Tape</h2>
+              <div class="tape-legend">
+                <span class="legend-item head">▼ Head</span>
+                <span class="legend-item blank">_ Blank</span>
+              </div>
+            </div>
+
+            <!-- Input String (above tape) -->
+            <div class="tape-input-row">
+              <label class="tape-input-label" for="input-string">📝 Input:</label>
+              <input id="input-string" type="text" class="tape-input-field" placeholder="Enter input string (e.g. aabb)"
+                spellcheck="false" autocomplete="off" />
+              <span class="tape-input-hint">blank = <code>_</code></span>
+            </div>
+
+            <div id="tape-container" class="tape-container"></div>
+
+            <!-- Speed Control (under tape) -->
+            <div class="tape-speed-row">
+              <span class="tape-speed-icon">⚡</span>
+              <span class="tape-speed-text">Speed</span>
+              <input type="range" id="speed-slider" min="1" max="10" value="5" class="speed-slider" />
+              <span id="speed-label" class="speed-label">Medium</span>
+            </div>
+          </section>
+
+          <!-- State Panel -->
+          <section class="panel-section">
+            <h2 class="section-title section-title-lg">🧠 Machine State</h2>
+            <br>
+            <div id="state-panel" class="state-panel"></div>
+          </section>
+
+          <!-- Control Panel -->
+          <section class="panel-section control-section">
+            <h2 class="section-title">🎛️ Controls</h2>
+            <br>
+            <div class="control-panel">
+              <button id="btn-run" class="btn btn-run" title="Auto-run (continuous)">
+                <span class="btn-icon">▶</span> Run
+              </button>
+              <button id="btn-step" class="btn btn-step" title="Execute one step">
+                <span class="btn-icon">⏭</span> Step
+              </button>
+              <button id="btn-back" class="btn btn-back" title="Step back one step" disabled>
+                <span class="btn-icon">⏮</span> Back
+              </button>
+              <button id="btn-pause" class="btn btn-pause" title="Pause auto-run" disabled>
+                <span class="btn-icon">⏸</span> Pause
+              </button>
+              <button id="btn-reset" class="btn btn-reset" title="Reset to initial state">
+                <span class="btn-icon">🔄</span> Reset
+              </button>
+            </div>
+            <div class="timeline-row" style="margin-top: 1rem; display: flex; align-items: center; gap: 1rem;">
+              <span class="timeline-icon">⏳</span>
+              <input type="range" id="timeline-slider" min="0" max="0" value="0" class="timeline-slider" style="flex: 1" disabled />
+              <span id="timeline-label" class="timeline-label" style="font-variant-numeric: tabular-nums; min-width: 40px; text-align: right;">0 / 0</span>
+            </div>
+          </section>
+
+          <!-- ID Trace Section -->
+          <section class="panel-section id-trace-section">
+            <div class="section-header">
+              <h2 class="section-title">📜 Instantaneous Description Trace</h2>
+              <span class="id-trace-formula">⊢ α q β (standard ID notation)</span>
+            </div>
+            <div id="id-trace-container" class="id-trace-container"></div>
+          </section>
+        </div>
+
+        <div class="simulator-right">
+          <!-- State Diagram Section -->
+          <section class="panel-section diagram-section">
+            <h2 class="section-title">📊 State Diagram</h2>
+            <br>
+            <div id="state-diagram-container" class="state-diagram-container"></div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ─ TRANSITIONS TAB ───────────────────────────────── -->
+      <div class="tab-panel hidden" data-panel="transitions">
+        <section class="panel-section">
+          <div class="section-header">
+            <h2 class="section-title">📋 Transition Function</h2>
+            <div class="transition-formula">
+              δ(state, symbol) → (next_state, write, direction)
+            </div>
+          </div>
+          <div id="transition-table-container" class="transition-table-container"></div>
+        </section>
+      </div>
+
+      <!-- ─ BUILDER TAB ────────────────────────────────────── -->
+      <div class="tab-panel hidden" data-panel="builder">
+        <div id="builder-container"></div>
+      </div>
+
+      <!-- ── STRESS TEST PANEL ─────────────────────────────────── -->
+      <div class="tab-panel hidden" data-panel="stress" id="panel-stress">
+        <h2 class="section-title section-title-lg">🧪 Batch Input Stress Tester</h2>
+        <br>
+        <div class="panel-section">
+          <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.85rem;">
+            Quickly execute the current Turing Machine algorithm against multiple inputs to verify generalization. Enter one input per line.
+          </p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+              <textarea id="stress-inputs" rows="10" class="bp-input" style="width: 100%; font-family: var(--font-mono); resize: vertical; padding: 0.75rem;" placeholder="aabb&#10;aaabbb&#10;_ (blank)"></textarea>
+              <button id="btn-run-stress" class="btn btn-primary btn-full mt-2" style="background: linear-gradient(135deg, var(--accent-purple), #6366f1); color: white; border: none; font-weight: bold;">▶ Run Stress Test</button>
+            </div>
+            <div style="flex: 2; min-width: 300px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;">
+              <div style="max-height: 290px; overflow-y: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;">
+                  <thead style="background: var(--bg-elevated); position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                      <th style="padding: 0.5rem 1rem;">Input</th>
+                      <th style="padding: 0.5rem 1rem;">Result</th>
+                      <th style="padding: 0.5rem 1rem;">Steps</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stress-results-tbody">
+                    <tr><td colspan="3" style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-style: italic;">Results will appear here.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── EXECUTION SUMMARY MODAL ────────────────────────────── -->
+  <div id="execution-summary-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2 class="modal-title">📊 Execution Summary</h2>
+      <div class="summary-metrics">
+        <div class="metric"><span class="metric-label">Result:</span> <span id="summary-result" class="metric-value"></span></div>
+        <div class="metric"><span class="metric-label">Total Steps:</span> <span id="summary-steps" class="metric-value"></span></div>
+        <div class="metric"><span class="metric-label">Final State:</span> <span id="summary-state" class="metric-value"></span></div>
+        <div class="metric"><span class="metric-label">Unique States Visited:</span> <span id="summary-unique-states" class="metric-value"></span></div>
+        <div class="metric"><span class="metric-label">Max Tape Expansion:</span> <span id="summary-tape" class="metric-value"></span></div>
+        <div class="metric"><span class="metric-label">Left Moves:</span> <span id="summary-left" class="metric-value"></span></div>
+        <div class="metric"><span class="metric-label">Right Moves:</span> <span id="summary-right" class="metric-value"></span></div>
+        <div class="metric"><span class="metric-label">Writes Performed:</span> <span id="summary-writes" class="metric-value"></span></div>
+      </div>
+      <button id="btn-close-summary" class="btn btn-primary btn-full mt-2">Close</button>
+    </div>
+  </div>
+
+  <!-- ── TOAST CONTAINER ────────────────────────────────────── -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────── -->
+  <footer class="app-footer">
+    <p>Turing Machine Simulator • Theory of Computation • δ(q, σ) → (q', σ', D)</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>

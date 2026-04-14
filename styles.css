@@ -310,6 +310,7 @@ body.light-mode .brand-icon {
 .speed-slider {
   flex: 1;
   -webkit-appearance: none;
+  appearance: none;
   height: 5px;
   background: linear-gradient(to right, var(--accent-primary), var(--accent-cyan));
   border-radius: var(--radius-full);
@@ -319,6 +320,7 @@ body.light-mode .brand-icon {
 
 .speed-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none;
   width: 16px;
   height: 16px;
   background: white;
@@ -597,8 +599,6 @@ body.light-mode .brand-icon {
 }
 
 /* ── STATE PANEL ───────────────────────────────────────── */
-.state-panel { }
-
 .state-panel-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -961,8 +961,6 @@ body.light-mode .brand-icon {
 }
 
 /* ── BUILDER ───────────────────────────────────────────── */
-.builder-section { }
-
 .builder-section-title {
   font-size: 1.2rem;
   font-weight: 700;
